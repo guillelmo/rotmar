@@ -99,9 +99,6 @@ def to_seconds(str_time):
     
 def main():
 
-    # print to_seconds("1:12:00")
-    # print to_seconds("0:00:00")
-    # print to_seconds("12:00")
     f = open("found.txt")
     found = f.read().split(" ")
 
@@ -122,25 +119,6 @@ def main():
             print found[1:20]
     
     
-    
-
-# City "asdfasdf <tr><td>City</td><td>Kenia</td></tr>"
-# Category <tr><td>Category</td><td>MSR</td></tr>
-# Overall place <tr><td>Overall place</td><td>3 / 7540
-# </td></tr>
-# Category place <tr><td>Category place</td><td>3 / 1340</td></tr>
-
-# 5
-# 10
-# 15
-# 20
-# half
-# 25
-# 30
-# 35
-# 40
-# final
-
 
 
 if __name__ == "__main__":
