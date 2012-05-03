@@ -1,0 +1,80 @@
+
+
+Rotterdam Marathon Crawler
+*****************************
+
+Two main processes: 
+
+- rotmar_spider.py: retrieves all the web pages with the results for the marathon. An info page will be retrieve for each runner, containing information about his race. 
+- process.py: parses all the retrieved pages, extracting the runner's time splits, classification, category and city of origin. The data is transformed to ease its use (ex: time splits transformed to seconds). 
+
++  Two bash scripts setup.sh and clean.sh, to create the directories and log files (the former) or delete them (the latter). 
+
+1. Crawler
+
+Fetches a set of pages from the url http://evenementen.uitslagen.nl/2012/marathonrotterdam/details.php by bib number. To determine which pages are to be retrieved, the range of bib numbers can be passed as a 
+parameter to the script. 
+
+The script will store all the pages in subdirectories, grouped by bib number range (ex: directory '2000' contains the pages for the bib numbers 2000 to 2999). 
+
+As an execution logs, two files are generated: notfound.txt and found.txt contains the bib numbers of the selected range for which a page exists/not exists. 
+
+
+Script Options: 
+
+	 -r: Defines a range of bib numbers to be extracted. 
+	 --prefix: Set a prefix to add to the bib number. It is useful to retrieve the bib numbers of the Woman category, which are of the form "FXXXX" (ex: F0001). 
+	 
+Example: 
+	 $ python rotmar_spider.py --prefix F -r 1,1999
+
+	 # Retrieves the pages for the bib numbers in the range (F1..F1999). 
+
+
+2. Analyzer
+
+The analyzer parses all the retrieved files, and exports the information to a csv file (rotmar.csv). 
+The fields extracted are: 
+
+- City of origin (of the runner)
+- Time splits for each 5 kms (5,10,15,etc), the half marathon, and the final time, expressed in seconds. 
+       Each time split represents the time to reach that kilometer since the start (that is, not partial splits). 
+- Category: a string of the form {M|V}{SR|35|40|45|50|55|60|65}, formed by the gender and the age group of the runner. 
+- Overall Place (as an integer)
+- Category place (as an integer). 
+
+In a few records (<15), the city of origin included a comma. This caused some problems when analyzing the data in Rapid Miner and were manually corrected (usually, deleting the least informative part of the city name). 
+Also a couple of records contained the character "ë" which caused some codification problems when dealing with it. Thus, it was replaced by "e". 
+
+2.1 EDA 
+    In order to perform linear regression the dataset is required to be complete, that is, there shouldn't be any missing values.     
+    Even though the extracted data set its pretty much complete, some time splits are missing for some runners (mostly, the time split for the km 5)
+    To correct this, the missing time split is set as the middle point between the previous and the following time split. For instance, if the time split for the 
+    km 10 is missing, 
+       ts_km10 = (ts_km15 - ts_km5) / 2
+
+    It seems pretty acceptable, as a best guess, to assume that the rythm between the km 15 and 5 is more or less uniform. 
+
+    A similar reasoning is applied to the extreme cases (i.e. when the first -5km- and the last splits are missing -40 km-): 
+
+    	 ts_km5 = ts_km10 / 2 
+	 ts_km40 = (ts_km35 + (ts_km35 - ts_km30)) / 2 = ts_km35 + (ts_km30 / 2)
+    
+    Those records missing more than 1 consecutive time split (only a few in the dataset, around 12) were manually deleted, as it is hard to correctly estimate them. 
+    
+      
+3. Auxiliar Scripts 
+
+setup.sh creates the log files and the directories necessary for running the script. 
+
+Parameters: 
+	    - p : Prefix, to be added at the beginning of the directories names (optional)
+	    - b : Bottom of the range of bib numbers to be retrieved. 
+	    - t : Top of the range of bib numbers to be retrieved. 
+
+Ex: 
+
+     setup.sh -b 1 -t 8240 -p F
+     #Creates the folders F0,F1000,F2000,...F8000 
+
+clean.sh removes all the subfolders in the current directory and cleans the log files. 
