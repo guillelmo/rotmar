@@ -1,6 +1,7 @@
 # -*- coding: latin-1 -*-
 
 import re
+import sys
 
 def extract(id):
 
@@ -99,23 +100,37 @@ def to_seconds(str_time):
     
 def main():
 
+    import getopt
+    opts, extraparams = getopt.getopt(sys.argv[1:], "r:")
+    for k,v in opts:
+        if k == '-r':
+            str_range = str.split(v,",")
+            bibs = range(int(str_range[0]), int(str_range[1]))            
+
+    try:
+        bibs
+    except NameError:
+        print "Bib number range not defined."
+        return
+
     f = open("found.txt")
     found = f.read().split(" ")
-
+    f.close()
+    
     f = open('rotmar.csv', 'w')
 
     csv_header = "city,km5,km10,km15,km20,hm,km25,km30,km35,km40,time,cat,place,cat_place\n"
 
     f.write(csv_header)
-    # return
-    for bib in range(1,8500):
-        if str(bib) in found: 
+    
+    for bib in bibs:
+        if str(bib) in found:
             data = extract(str(bib))
             proc_data = process(data)
             rec = csv_record(proc_data)
             f.write(rec+"\n")
         else:
-            print str(bib)+" not in "
+            print str(bib)+" not in range"
             print found[1:20]
     
     
