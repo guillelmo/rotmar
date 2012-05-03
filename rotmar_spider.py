@@ -44,6 +44,9 @@ def main():
 
     print "Fetching bibs from " + prefix + str(bibs[0]) + " to "+ prefix + str(bibs[len(bibs)-1])
 
+    notfound = open('notfound.txt', 'w')
+    found = open('found.txt', 'w')
+    
     base_url = "http://evenementen.uitslagen.nl/2012/marathonrotterdam/details.php"
     parameters = { "s":"1", "o": "1", "t": "en"}
 
@@ -62,24 +65,19 @@ def main():
                 
         response = fetch(base_url+params,0)
         if "Not found" in response.content:
-            f = open('notfound.txt', 'a')
-            f.write(' '+prefix+str(s))
-            f.close()
+            notfound.write(' '+prefix+str(s))
         elif "Net split times" in response.content:
-            f = open('found.txt', 'a')
-            f.write(' '+prefix+str(s))
-            f.close()
-
-            #f = open('%(dir)s/%(bib)04d.html' % {'bib': s,'dir': prefix + str((s / 1000) * 1000)}, 'w')
+            found.write(' '+prefix+str(s))
+            
             f = open('%(dir)s/%(prefix)s%(bib)04d.html' % {'bib': s,'dir': prefix+ str((s / 1000) * 1000), "prefix": prefix}, 'w')
-            #f = open('%(dir)/%(bib)04d.html' % {'bib': s,'dir': s / 1000}, 'w')
             f.write(response.content)
         else:
-            print "Error: not found "+str(parameters['s'])
-            f = open('notfound.txt', 'a')
-            f.write(' '+str(parameters['s']))
-            f.close()
-            
+            print "Error: not found "+str(parameters['s'])            
+            notfound.write(' '+str(parameters['s']))
+
+
+    notfound.close()
+    found.close()
 
             
 
