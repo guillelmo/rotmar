@@ -3,6 +3,15 @@
 Rotterdam Marathon Crawler
 *****************************
 
+0. Content of this repository:
+
+- Data extracting and processing scripts [rotmar_spider.py, process.py]
+- Auxiliar scripts (environment setup and cleaning) [clean.sh, setup.sh]
+- Latest version of the final dataset [rotmar.csv]
+- Log files of the crawler [found.txt, notfound.txt]
+
+Introduction: 
+
 Two main processes: 
 
 - rotmar_spider.py: retrieves all the web pages with the results for the marathon. An info page will be retrieve for each runner, containing information about his race. 
@@ -43,8 +52,20 @@ The fields extracted are:
 - Overall Place (as an integer)
 - Category place (as an integer). 
 
-In a few records (<15), the city of origin included a comma. This caused some problems when analyzing the data in Rapid Miner and were manually corrected (usually, deleting the least informative part of the city name). 
-Also a couple of records contained the character "ë" which caused some codification problems when dealing with it. Thus, it was replaced by "e". 
+Options: 
+
+	 -r: Defines the range of bibs to be processed. 
+	 -a: if set, instead of writing the output file from scratch, adds the new records at the end of it. 
+	 This option assumes that there's already some content in the file, so it won't write the csv header (which names the fields) again. 
+
+Examples: 
+	  
+	   $ python process.py -r 1,1999 
+	   # Analyzes the bib numbers in the range (1..1999). The results are written in rotmar.csv (from scratch, deleting any previously existing content in that file). 
+
+	   $ python process.py -r F1,F1999 -a
+	   # Analyzes the bib numbers in the range (F1..F1999). The results are append to the file rotmar.csv (following any previously existing content in that file). 
+	   
 
 2.1 EDA 
     In order to perform linear regression the dataset is required to be complete, that is, there shouldn't be any missing values.     
@@ -59,8 +80,25 @@ Also a couple of records contained the character "ë" which caused some codifica
 
     	 ts_km5 = ts_km10 / 2 
 	 ts_km40 = (ts_km35 + (ts_km35 - ts_km30)) / 2 = ts_km35 + (ts_km30 / 2)
+
+    The case of the half marathon split is slightly different (as its an interval of only 1.0975 km, instead of a 5km), but the same reasoning applies: 
+
+    	ts_hm = ((ts_km25 - ts_km20) / 5) + ts_km20 
+	[* The 1.095 km is rounded to 1 km *]
     
     Those records missing more than 1 consecutive time split (only a few in the dataset, around 12) were manually deleted, as it is hard to correctly estimate them. 
+
+    2.1.1. Format problems. 
+
+    In a few records (~30), the city of origin included a comma. To correctly export this records to CSV format, the city name was quoted. 
+    Also a couple of records contained the character "ë" which caused some codification problems when dealing with it. Thus, it was replaced by "e". 
+    Same applies for the character "ń", which was replaced for its near equivalent "n". 
+
+    2.1.2. Free text fields
+
+    The value of the "city of origin" field, in most of the cases, corresponds to its name. However, in many cases, that's not true, and other information 
+    generally relating to procedence is present (from country of origin to the ahtletic club of the runner -i.e. "Dutch Runners Gold"-). As this still might 
+    provide information about the origin of the runner, those "not entirely correct" fields have been included into the dataset. 
     
       
 3. Auxiliar Scripts 
